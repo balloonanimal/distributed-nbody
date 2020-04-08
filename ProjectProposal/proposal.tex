@@ -5,10 +5,10 @@
 \documentclass[11pt]{article}
 
 % use some other pre-defined class definitions for the style of this
-% document.   
-% The .cls and .sty files typically contain comments on how to use them 
-% in your latex document.  For example, if you look at psfig.sty, the 
-% file contains comments that summarize commands implemented by this style 
+% document.
+% The .cls and .sty files typically contain comments on how to use them
+% in your latex document.  For example, if you look at psfig.sty, the
+% file contains comments that summarize commands implemented by this style
 % file and how to use them.
 % files are in: /usr/share/texlive/texmf-dist/tex/latex/preprint/
 \usepackage{fullpage}
@@ -40,6 +40,7 @@
       \setlength{\parskip}{0pt}
 \setlength{\parsep}{0pt}}{\end{itemize}
 }
+\usepackage{amsmath}
 
 % this starts the document
 \begin{document}
@@ -47,48 +48,83 @@
 % for an article class document, there are some pre-defined types
 % for formatting certain content: title, author, abstract, section
 
-\title{CS87 Project Proposal: A Concise and Meaningful Title}
+\title{CS87 Project Proposal: 
+Efficient Numerical Simulation of the N-Body Problem using MPI}
 
-\author{Author1, Author2, Author3 \\ 
+\author{Brendan Werth, Gus Burchell, Zach Rothenberg\\
 Computer Science Department, Swarthmore College, Swarthmore, PA  19081}
 
 \maketitle
 
-\section {Introduction}\label{intro} 
-A 1-2 paragraph summary of the problem you are solving, why it is interesting,
-how you are solving it, and what conclusions 
-you expect to draw from your work.
+\section {Introduction}\label{intro}
+%A 1-2 paragraph summary of the problem you are solving, why it is interesting,
+%how you are solving it, and what conclusions
+%you expect to draw from your work.
+The $N$-body problem is a classic problem in physics: Given $N$ massive bodies how can we predict their motion influenced by the gravity of the others? For $N = 2$ this problem has been known to have an analytical closed form solution since the mid seventeenth century, when it was found by Johann Bernoulli. This result can be used to describe the motions of binary star systems, or to approximate the orbit of a planet around the sun. However for $N > 2$ this problem has no closed form solution and can only be approximated with numerical techniques. Since most modern astrophysical problems must deal with the interaction of far more than $2$ bodies, the efficient simulation of this problem is of critical importance to the scientific community.
+
+There are many ways to go about simulating the behavior of an $N$-body system. The naive approach is to calculate the mutual attraction on every pair of massive particles, from which the motion of the system can be progressed in fixed time steps. While this approach is the easiest to understand, it suffers from some critical problems that make it unsuitable for scientific applications. First, the force calculations must be made for every pair of particles, causing the algorithm to scale quadratically with $N$. For small values this is not too much of an issue, but with the large values of $N$ required for many astronomical problems of interest this scaling becomes prohibitive. This problem is solved by adapting a log-linear approximation algorithm, such as the \emph{particle mesh} method or the \emph{Barnes-Hutt} tree. Secondly, evolving a physical system in discrete time steps can result in inaccurate behavior. Rapidly orbiting particles may take steps that skip over important interations and energy may fail to be conserved. This is solved by using a higher order integration technique like \emph{leapfrog integration}.
+
+With any of these modifications the $N$-body problem remains a prime ground for parallelization. The evolution of individual particles over a single time step is an embarrasingly parallel workload, with no dependence between tasks. However the state of the system must be shared among systems between time steps, making this an interesting problem in the coordination between processes. Naively data is shared between all nodes between each step. This approach can be improved to a more local sharing scheme under appropriate approximation tradeoffs. In this paper we hope to investigate and implement an efficient and accurate $N$-body simulation that considers all physical and parallel factors.
+
+% The most direct way to simulate the behavior of an $N$-body system is by a full \emph{particle-particle} approach, in which the forces between every pair of massive bodies is calculated and the state of the system is progressed in small discrete time steps. While this approach determines the motion of the system very accurately, it scales quadratically with $N$, making it impractical for large problem sizes. To combat this, several other approximation approaches have been proposed to lower this complexity. In this project we hope to investigate the recursive tree-based \emph{Barnes-Hutt} algorithm developed for this problem, which scales in a log-linear fashion. In addition, since the future position of each body depends only on the current positions of all others this problem is frequently made embarassingly parallel, lending itself well to efficient computation on parallel computers. We hope to construct an MPI based implementation that can run on a supercomputer scale system to simulate this problem for large $N$. In doing so we will learn about the different physical considerations and techniques in parallelizing for high performance computing.
 
 \section {Related Work}\label{rel}
-1-2 paragraphs describing similar approaches to the one you propose. This need
-not be an exhaustive summary of related literature, but should be used to put
-your solution in context and/or to support your solution. This is also a good
-way to motivate your work. This can be a summary taken from your longer
-annotated bibliography.  
+%1-2 paragraphs describing similar approaches to the one you propose. This need
+%not be an exhaustive summary of related literature, but should be used to put
+%your solution in context and/or to support your solution. This is also a good
+%way to motivate your work. This can be a summary taken from your longer
+%annotated bibliography.
+Fortunately for us, this problem is of wide interest and the subject lots of literature.
+We will use what we can learn from other shared and described implementations
+to produce a deliverable quickly, and as well as continue to nuance our 
+implementation by inspiring various extensions.
+Our primary starting point will be ~\cite{poortillo:mpiBarnesHut}, a well-documented
+MPI implementation of the the \emph{Barnes-Hut} solution to the N-body problem.
+While this work is implemented in Python, rather than the C(++) that we will
+be using, it provides a strong example which we can follow to quickly
+get up implementation up and running. Additionally, the codebase they
+provide will serve as an executable exemplar to which we can compare our solution.
 
-Here is an example of how to cite someting from the bib 
-file~\cite{newhall:nswap2L}.  Here is another~\cite{unixV}.  
-The proposal.bib file has some example 
-bibtex entries you can use as a guide for entering your own.
 
 In the Annotated Bibliography~\ref{annon} you will included an expanded description of your related work (and you should cite there as well.
 
 \section {Your Solution}\label{soln}
-3-4 paragraphs describing what you plan to do, how you plan to do it, how it
-solves the problem, and what types of conclusions you expect to draw from your
-work.
+Our solution will be delivered in two parts. First, we will implement the most basic parallel $N$-body simulation. This program will work by a \emph{particle-particle} approach, where the force on each particle is calculated using Newton's law of universal gravitation summed over all other particles. The calculation for a particle $n$ is given below:
+\[
+    F_n = Gm_n\sum_{m \neq n}\frac{m_y}{d(x_n,x_m)}
+\]
+This approach asymptotically scales on the order of $O(N^2)$, as we must iterate over all pairs of particles. It is also worth noting here that the distance function $d(x,y)$ does not exactly reflect the true distance between the two bodies, but instead returns a slightly padded distance in order to avoid the singularity that occurs when two particles share the same location. The state of the system will then be evolved in discrete time steps using \emph{Euler's Method}, where
+\begin{align*}
+v_n &= v_n + F_n(\Delta t) \\
+x_n &= x_n + v_n(\Delta t)
+\end{align*}
+With time step size $\Delta t$ an adjustable parameter of the simulation.
+
+This first program will be implemented in parallel using MPI. At the start of the simulation a master node will generate the initial state, including all particle's positions, velocities, and masses. It will then broadcast this information to all other worker processes. Then each time step is calculated individually be each process, interspersed with sending information to the master who then broadcasts it back out again. In this way all processes will maintain an accurate copy of the state at the beginning of each time step.
+
+For our second implementation we intend to use as many of the aforementioned improvements as possible. The first and most important will be moving from our quadratic particle-particle method to the \emph{Barnes-Hutt} tree algorithm. Here instead of calculating every possible interaction we group close particles together, so that we can do operations on the centers of mass of a few clusters. Since we do this grouping in a hierarchical fashion this algorithm is able to scale on the order of $O(N\logN)$, a large improvement. In addition we will implement \emph{leapfrog integration}, where instead of evolving the position and velocity together we offset our calculations
+\begin{align*}
+v_{n + 3/2} &= v_{n + 1/2} + F_{n+1}(\Delta t) \\
+x_{n+1} &= x_n + v_{n+1/2}(\Delta t)
+\end{align*}
+While this may look like a small adjustment, this approach results in much more accurate simulation, where the energy observed in the simulated system keeps close to the physical reality. 
+
+The Barnes-Hutt algorithm also opens up the door for new approaches to parallelization. Once again we intend to use a master-worker approach, however now both the construction of the tree and the simulation over time can be parallelized. There are several ways to accomplish this parallelization that we intend to investigate further before implementation.
+
+Due to the nature of this project and our relative inexperience with MPI programming we are uncertain how sophisticated this second implementation will become. As such we have made a list of potential expansions to our second implementation if time admits. All are sourced from \ref{CM_190}.
+\begin{enumerate}
+    \item \textbf{Variable length time steps}. Particles far apart from others can take large time steps accurately, while those close together require small steps. Different time steps can be used for different particles in order to simulate faster while preserving accuracy.
+    \item \textbf{Decentralized parallelization}. Instead of a master-worker approach where the master is a bottleneck for communication, there exist entirely distributed methods where processes share information between each other. This can result in a massive speedup for large simulations.
+    \item \textbf{Essential trees}. Communicating the entire tree between processes is unnecessary, as the Barnes-Hutt algorithm only requires the center of mass for far away clusters. By intelligently distributing the tree to processes we can build a minimal accurate tree for each and eliminate a huge amount of communication between processes. This not only speeds up calculation, but also allows for simulations that are too large to fit in the memory of any single node. 
+\end{enumerate}
 
 \section {Experiments}\label{exper}
-1-3 paragraphs describing how you plan to evaluate your work. List the
-experiments you will perform. For each experiment, explain how you will perform
-it and what the results will show (explain why you are performing a particular
-test).
+To evaluate the performance of our different implementations we intend to run both on the same set of parameters and time the difference in execution time. The parameters varied will be the number of particles $N$ and the number of processes $P$. For these runs we are not only interested in the real time (Barnes-Hutt is asymptotically faster than a particle-particle approach, we expect it to run faster) but also the scalability of the implementation as the number of processes increases. This will be evaluated using the metric of strong scalability. Our goal is to determine how the tree structure impacts the overhead of synchronizing between processes.
+
+We also intend to see how well our simulations model the underlying physical systems. Since many approximation tradeoffs are made in order to enable efficient runtime, we'd like some assurance that our program is still usefully modeling physics. To do this we will track the total energy of the system as in \ref{Harvard_205}. We expect the first program using Euler's method to slowly drift away from the initial energy, while the second using leapfrog integration should oscillate around the initial value. In a true physical system the energy would be conserved, so the closer we can get to this the better.
 
 \section {Equipment Needed}\label{equip}
-1 paragraph listing any software tools that you will need to implement and/or
-test your work. If you need to have software installed to implement your
-project, you should check with the systems lab to see if it is something that
-can be installed on the CS lab machines.
+We plan on running this simulation on a supercomputer scale machine. For this we intend to do most of our initial runs on Strelka before moving on to an XSEDE machine. We would ideally like to perform at least one fairly large $N$ simulation, which would require the right machine for the job. We are unsure what the right XSEDE resource will be (comet or otherwise) and will require a bit more investigation into the scaling of our algorithm to determine whether we need to request authorization on a new machine. All programs will be implemented using MPI so no additional software is required.
 
 \section {Schedule}\label{sched}
 list the specific steps that you will take to complete your project, include
@@ -96,14 +132,16 @@ dates and milestones. This is particularly important to help keep you on track,
 and to ensure that if you run into difficulties completing your entire project,
 you have at least implemented steps along the way. Also, this is a great way to
 get specific feedback from me about what you plan to do and how you plan to do
-it.  Conclusions: 1 paragraph summary of what you are doing, why, how, and what
+it.  
+
+Conclusions: 1 paragraph summary of what you are doing, why, how, and what
 you hope to demonstrate through your work.
 
-% here is an example of a numbered list 
+% here is an example of a numbered list
 \begin{my_enumerate}
-  \item Week 1: 
-  \item Week 2: 
-\end{my_enumerate} 
+  \item Week 1:
+  \item Week 2:
+\end{my_enumerate}
 
 
 
@@ -116,14 +154,13 @@ you hope to demonstrate through your work.
 \bibliographystyle{plain}
 
 % force a page break
-\newpage 
+\newpage
 
 % I want the Annotated Bib to be single column pages
 \onecolumn
-\section*{Annotated Bibliography}\label{annon} 
+\section*{Annotated Bibliography}\label{annon}
 
 This section does not count towards the page total for your proposal.
 
 
 \end{document}
-
