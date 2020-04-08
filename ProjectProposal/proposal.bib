@@ -4,79 +4,50 @@
 % annotate is used to add comments about the work to the .bib file
 % entries (its contents will not show up in the References section) 
 % see http://www.bibtex.org/ for lots more information
-
-
 % not every field of each style of entry is required, but author, title,
 % year, and some specification of how it is published is required for
 % most formats  (I could remove month here, for example)
 % anything I put in { } will be translated as is (this is how I can
 % force capitaliziation), anything in "" will be capitalize based on
 % the whim of bibtex
-@INPROCEEDINGS{newhall:nswap2L, 
-  author = "Tia Newhall and Douglas Woos",
-  title = "Incorporating Network {RAM} and Flash into Fast Backing Store 
-  for Clusters",
-  booktitle = "{IEEE} Cluster Conference", 
-  MONTH = September,
-  year = 2011
-} 
+~\cite{poortillo:mpiBarnesHut}
 
-@MISC {bulatov:HYP,
-        AUTHOR = "Vladimir Bulatov",
-        TITLE = "Hyper{P}rof - hyperbolic profile browser for {J}ava",
-        HOWPUBLISHED = "http://pc153.mt.ic.ac.uk/Bulatov/HyperProf/",
-        ANNOTE =  "visualization for Java -prof output, based on 
-          Poincarte's 2-D model of hyperbolic space.
-          "
+@MISC{Harvard_205,
+  author        = {Marion Dierickx, Stephen Portillo},
+  title         = {N-Body Building},
+  month         = {December},
+  year          = {2013},
+  annotate      = {The N-body problem can be solved by integrating the equations of motion, however particle-particle methods require too much computation. Tree codes can reduce computational cost and are more adaptive to high clustering. The N-body problem has useful applications, such as simulating the gathering of dark matter. \par
+  
+  A problem with this implementation is the worsening efficiency with number of processes because the full tree is always being broadcasted. A better implementation would reduce the communication between the processes. 
+  
+  }
 }
-
-@MISC {newhall:help,
-        AUTHOR = "Tia Newhall",
-        TITLE = "{CS} and {U}nix Help Pages",
-        HOWPUBLISHED = "\url{www.cs.swarthmore.edu/\~newhall/unixlinks.html}",
-        ANNOTE =  "
-          "
+@misc{CM_190,
+  author        = {Andrew Benson},
+  title         = {Computational Astrophysics: N-Body and SPH Techniques},
+  month         = {February},
+  year          = {2011},
+  annotate      = {This is a collection of notes made by Andrew Benson for the Ay 190 class in computational astrophysics at Carnegie Mellon university. In the notes he explores both the N-body problem and a broader simulation technique called Smoothed Particle Hydrodynamics (SPH). SPH is used to simulate particles that interact in a ways other than gravity, such as a cloud of gas. This results in a more complicated model than N-body gravitation. In our domain we only intend to simulate gravitational interactions, an assumption fit for dark matter or clusters of spread out stars, neither of which are influenced by non gravitational forces.
+  \par
+    For the N-body problem Benson splits into three subproblems: 1. Determining the initial state of the system; 2. Calculating forces on particles; 3. Stepping through time. Of the three we've decided to focus on the latter two, but if initial setup becomes an issue this is a good resource. For calculating forces Benson describes first the particle-particle approach. He then suggests two loglinear alternatives, a particle mesh which relies on Fourier transforms and the Barnes-Hut tree algorithm. In particular their analysis of Barnes-Hut comes complete with an easy to read intuitive walkthrough and suggested hyperparameter values. They also go much further in depth, suggesting many of the extensions that have become our implementation reach goals. Their discussion of time step procedures also includes justification for leapfrog integration.
+    \par
+    While the discussion of parallelization is notably brief, it includes many ways to extend the trivial master-worker model into a more sophisticated distributed calculation that minimizes communication.
+    }
 }
-
-@BOOK {unixV,
-        KEY = "unixV",
-        AUTHOR = "AT\&T",
-        TITLE = "System {V} {I}nterface {D}efinition, {T}hird {E}dition",
-        PUBLISHER = {Addison-Wesley},
-        YEAR = 1989
+@ARTICLE{barnes-hut,
+  author        = "Josh Barnes, Piet Hut",
+  title.        = "A hierarchical O(NlogN) force-calculation algorithm",
+  month         = "December",
+  year          = "1986",
+  journal       = "Nature",
+  annotate.     = {In this historic paper, Barnes and Hut propose a novel method for calculating the forces N-bodies exert on each other in a more efficient manner. Namely, the paper introduces a O(N log(N)) algorithm which stores the N-bodies in a tree format of cubic subdivisions of space with one body in each subdivided cell. This method allows for faster calculations of forces as it groups distant bodies together, simplifying calculation. It is also a step up over previous approaches as it does not introduce any other assumptions or simplifications which muddy the interpretation of the calculated forces. While the numerical findings reported in the paper were performed on now antiquated hardware and are therefore not useful for comparison to our implementation, the conceptual groundwork the paper lays out will be invaluable.
+  \par
+  Our main purpose for reading and including this paper is to get a deep understanding of what we are actually implementing. While the paper does not speak to the actual mechanisms we will use for parallelization, ie MPI, it provides the rational for using a tree approach over a naive implementation. This knowledge will be essential in the early stages of the project, when we are implementing our own Barnes-Hut program and comparing it to our naive solution. In particular, having read the original text will allow us to make better sense of what speed-ups from the naive are due to algorithmic differences and which are potential interesting artifacts of our particular implementation and stack. The paper also provides a SCHEME implementation of the algorithm, which may prove useful when implementing it ourselves, especially for getting a different, more functional perspective.}
+  }
+@misc{leapfrog,
+  author        = {Peter Young},
+  title         = {The leapfrog method and other “symplectic” algorithms for integrating Newton’s laws of motion},
+  month         = {April},
+  year          = {2013},
 }
-
-
-@ARTICLE {armstrong:hotspot,
-        AUTHOR = "Eric Armstrong",
-        TITLE = "HotSpot: {A} new breed of virtual machine",
-        JOURNAL = "{JavaWorld}  http://www.javaworld.com/",
-        YEAR = 1998,
-        MONTH = March,
-        ANNOTE =  ""
-}
-
-@TECHREPORT {metering,
-        KEY = "metering",
-        AUTHOR = "Mark Kantrowitz",
-        TITLE = "Portable {U}tilities for {C}ommon {L}isp, {U}ser {G}uide  and {
-I}mplementation {N}otes",
-        INSTITUTION = "{Carnegie Mellon University}",
-        NUMBER = "CMU-CS-91-143",
-        MONTH= "May",
-        YEAR = 1991,
-        ANNOTE =  "
-           Profiling tool for Lisp programs
-           works by annotating code with a specification of which functions
-           to monitor
-           can provide inclusive and exclusive timing information, number of
-           calls, cons per call, and adjust times with an estimate of total
-           timing overhead, plus the an estimate of timing overhead is
-           subtracted from each function time
-	"
-}
-
-
-
-
-
