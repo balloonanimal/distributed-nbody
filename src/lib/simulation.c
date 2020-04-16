@@ -49,6 +49,8 @@ void calc_gravity_pp(Simulation* sim) {
     int i, j;
     Particle* particles = sim->particles;
 
+    // TODO: MPI set new bounds
+
     // zero all accelerations
     for (i = 0; i < sim->N; i++){
         particles[i].acceleration.x = 0;
