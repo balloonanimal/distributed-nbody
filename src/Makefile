@@ -18,6 +18,6 @@ test:
 	$(CC) $(CFLAGS) $(LIB_FLAGS) test.c -o test
 
 clean:
-	unlink nbody.so
+	unlink libnbody.so
 	make -C ./lib/ clean
 	rm -f $(EXPERIMENTS)
