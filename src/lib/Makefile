@@ -10,7 +10,10 @@ _LIBFILE = nbody.so
 LIBFILE = $(BUILD_DIR)/$(_LIBFILE)
 
 
-all: $(LIBFILE)
+all: $(BUILD_DIR) $(LIBFILE)
+
+$(BUILD_DIR):
+	mkdir $@
 
 $(LIBFILE): $(OBJ)
 	$(CC) $(CFLAGS) -shared $(OBJ) -o $@
