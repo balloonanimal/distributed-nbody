@@ -10,14 +10,14 @@ all: library $(EXPERIMENTS)
 
 library:
 	@echo "Building Library"
-	make -C ./lib/
-	ln -s ./lib/build/libnbody.so .
+	@make -C ./lib/
+	-@ln -s ./lib/build/libnbody.so .
 	@echo "Done building Library"
 
 test:
 	$(CC) $(CFLAGS) $(LIB_FLAGS) test.c -o test
 
 clean:
-	unlink libnbody.so
-	make -C ./lib/ clean
-	rm -f $(EXPERIMENTS)
+	-@unlink libnbody.so
+	-@make -C ./lib/ clean
+	-@rm -f $(EXPERIMENTS)

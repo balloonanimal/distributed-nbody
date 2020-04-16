@@ -22,5 +22,5 @@ $(BUILD_DIR)/%.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	rm -f $(BUILD_DIR)/*.o
-	rm -f $(BUILD_DIR)/*.so
+	-@rm -f $(BUILD_DIR)/*.o
+	-@rm -f $(BUILD_DIR)/*.so
