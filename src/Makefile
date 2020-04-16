@@ -11,7 +11,7 @@ all: library $(EXPERIMENTS)
 library:
 	@echo "Building Library"
 	make -C ./lib/
-	ln -s ./lib/build/nbody.so .
+	ln -s ./lib/build/libnbody.so .
 	@echo "Done building Library"
 
 test:
