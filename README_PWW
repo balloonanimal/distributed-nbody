@@ -23,7 +23,7 @@ Week 2: Implement the Barnes-Hut tree algorithm by
 Week 3: Deal with problems that may still linger in our
   solutions. Begin large-scale testing and data collection. Ensure data
   visualization is functioning. If additional time remains, add additional
-  functionality (see \ref{soln}. By April 28th.
+  functionality (see \ref{soln}). By April 28th.
 Week 4: Finish testing and data
   collection, including at least one very large $N$ run. Analyze runtime
   measurements. Finalize any visualizations which still require attention, and
@@ -32,7 +32,33 @@ Week 4: Finish testing and data
   13th.
 
 
+As it stands currently, at the end of the project work week, we 
+have implemented both a naive (ie sequential and paritical-particale 
+force calculation) working solution, and an algorithmically simple 
+MPI implementation. Primarily, then
+the largest source-code component still requiring oto be implemented is 
+the Barnes-Hut algorithm for more effeciently calculating the forces
+the particless exert on each other. While we were not explicit about the 
+sequential/MPI distinction during our initial schedule, we get the impression
+that are we slightly ahead of schedule in terms of code implementation. 
 
+For the other half of the project, namely running large tests and creating a good
+method for visualizing the results from our program's runs, we have been 
+a little less proactive. While we have done some modest runs and visually
+inspected the output for generally correct tendencies, we have not made
+much headway toward representing the output in a pleasent and easy to 
+interpret manner. To ammend our initial schedule, we will be emailing
+Professor Danner at the beginning of week two, as well as trying out the
+static plotting of our program's output -- this has been our base-level plan 
+for visualization, but one which we need to actually confirm is as easy as we
+anticipate. We will also start preparing our presentation in earnest in the
+coming week, additionally aided by our mid-project presentation which we are
+preparing this weekend for our scheduled presentation on Tuesday. Due to the
+further than anticipated state of our code, we are not partically worried
+about the ability to meet our other goals on schedule -- rather, we will 
+shift the amount of relative time we are spending on running tests and writing
+up our project vs getting the implementation to run. 
+o
 
 PROMPT
 ==========================
