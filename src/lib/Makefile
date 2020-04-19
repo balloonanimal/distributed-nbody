@@ -1,11 +1,11 @@
 CC = mpicc
 CFLAGS_WARN = -Wall -Wvla -Werror -Wno-error=unused-variable
-CFLAGS = -std=c11 -g -O2 -fPIC $(CFLAGS_WARN)
+CFLAGS = -std=c99 -g -O2 -fPIC -lm $(CFLAGS_WARN)
 
 BUILD_DIR = build
-_OBJ = simulation.o
+_OBJ = simulation.o mpi_utils.o
 OBJ = $(patsubst %,$(BUILD_DIR)/%,$(_OBJ))
-HEADERS = simulation.h types.h
+HEADERS = simulation.h types.h mpi_utils.h
 _LIBFILE = libnbody.so
 LIBFILE = $(BUILD_DIR)/$(_LIBFILE)
 

@@ -1,32 +1,49 @@
 #include <stdio.h>
 
 #include "simulation.h"
+#include "mpi_utils.h"
 
 int main(int argc, char *argv[]) {
     Simulation* sim = init_simulation();
-    sim->gravity_method= PARTICLE_PARTICLE;
+    sim->gravity_method = PARTICLE_PARTICLE;
     sim->integration_method = LOCKSTEP;
 
-    Particle pt1 = {};
+    Particle pt1 = {0};
     pt1.mass = 100;
-    add_particle(sim, pt1);
+    add_particle(sim, pt1, true);
 
-    Particle pt2 = {};
-    pt2.position.x = 100;
-    /* pt2.velocity.y = 100; */
+    Particle pt2 = {0};
     pt2.mass = 1;
-    add_particle(sim, pt1);
+    pt2.position.x = 100;
+    add_particle(sim, pt2, true);
 
-    // pt2 should fall in to pt1
-    integrate(sim, 1);
+    sim->N_owned = 2;
 
-    pt1 = sim->particles[0];
-    pt2 = sim->particles[1];
-    printf("pt1 position = x: %lf y: %lf z: %lf\n",
-           pt1.position.x, pt1.position.y, pt1.position.z);
-    printf("pt2 position = x: %lf y: %lf z: %lf\n",
-           pt2.position.x, pt2.position.y, pt2.position.z);
-    /* integrate(sim, 100); */
+    Particle *pt1_ = &(sim->parray.particles[0]);
+    Particle *pt2_ = &(sim->parray.particles[1]);
+
+    for (int i = 0; i < 5; i++) {
+        integrate(sim, 1);
+        printf("STEP %d\n", i);
+        printf("pt1 position = %f\n", pt1_->position.x);
+        printf("pt2 position = %f\n", pt2_->position.x);
+    }
+
+
+    /* printf("pt1 acceleration = x: %lf y: %lf z: %lf\n", */
+    /*        pt1_->acceleration.x, pt1_->acceleration.y, pt1_->acceleration.z); */
+    /* printf("pt2 acceleration = x: %lf y: %lf z: %lf\n", */
+    /*        pt2_->acceleration.x, pt2_->acceleration.y, pt2_->acceleration.z); */
+    /* // pt2 should fall in to pt1 */
+    /* /\* integrate(sim, 1); *\/ */
+    /* printf("Calculating gravity\n"); */
+    /* calc_gravity(sim); */
+
+    /* printf("pt1 acceleration = x: %lf y: %lf z: %lf\n", */
+    /*        pt1_->acceleration.x, pt1_->acceleration.y, pt1_->acceleration.z); */
+    /* printf("pt2 acceleration = x: %lf y: %lf z: %lf\n", */
+    /*        pt2_->acceleration.x, pt2_->acceleration.y, pt2_->acceleration.z); */
+    integrate(sim, 100);
 
 
     return 0;

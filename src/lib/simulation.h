@@ -1,15 +1,21 @@
 #pragma once
 
 #include "types.h"
+#include "mpi_utils.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 // initialize simulation with default values
 Simulation* init_simulation(void); 
 
+// grow particle array to size len
+void grow_array(ParticleArray* arr, int len);
+// add particle to particlearray
+void add_particle_to_array(ParticleArray* arr, Particle pt);
 // add particle to simulation
-void add_particle(Simulation* sim, Particle pt);
+void add_particle(Simulation* sim, Particle pt, bool owned);
 
 // updates all particle accelerations according to the value of gravity_method
 // TODO: does this statefully, maybe worth looking at immutability?

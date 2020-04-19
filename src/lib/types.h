@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <mpi.h>
 
 typedef struct {
     double x; 
@@ -14,6 +16,12 @@ typedef struct {
     Vec3d acceleration;
     double mass;
 } Particle;
+
+typedef struct {
+    Particle* particles;
+    int len;
+    int allocation;
+} ParticleArray;
 
 typedef enum {
     PARTICLE_PARTICLE = 0,
@@ -30,10 +38,16 @@ typedef struct {
     double dt; // size of timestep
     double G; // value of gravitational constant
     double softening; // value of softening constant
-    Particle* particles; // array of particles
-    uint64_t N; // total number of particles
-    uint64_t particles_allocation;
+    ParticleArray parray; // array of particles
+    uint64_t N_owned; // total number of particles this node owns
     GravityMethod gravity_method; // which algorithm to use for gravity calculations
     IntegrationMethod integration_method; // which algorithm to use for integration
     // TODO a bunch of MPI stuff
+    bool use_mpi;
+    int MPI_pcount;
+    int MPI_rank;
+    MPI_Datatype MPI_particle_type;
+    ParticleArray* send_arrays;
+    ParticleArray* recv_arrays;
+    int* recv_sizes;
 } Simulation;
