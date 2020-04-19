@@ -10,6 +10,7 @@ time steps. The MPI based implementation can be run
 ===========
 mpirun -np 4 --hostfile hostfilebig ./benchmark_mpi 100 10000
 ===========
+The start of some results are shown in source/README.md
 
 This was our schedule:
 Week 1: Implement the naive algorithm in C++ by Tuesday
@@ -58,23 +59,3 @@ further than anticipated state of our code, we are not partically worried
 about the ability to meet our other goals on schedule -- rather, we will 
 shift the amount of relative time we are spending on running tests and writing
 up our project vs getting the implementation to run. 
-o
-
-PROMPT
-==========================
-Tell me whether your code is build-able and runnable, and if so how to do
-both (command line examples). A list of your project plan from your project
-proposal that is annotated with notes about which parts of your plan you
-accomplished this week; tell me what you did this week, tell me what new
-parts were implemented, what new parts tested, etc. You may have an altered
-project plan from the one you submitted with your proposal, which is fine.
-Use the project plan that best fits your project now.
-
-Annotate your plan with which group member was responsible for completing
-different parts, and which are responsible for future parts. If some were
-worked on by more than one of you, include both/all of you in the annotation
-for that task.
-
-You should have more details filled out than from your proposal plan that
-reflect what you have done and what changes you have made to your next
-steps.
