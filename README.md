@@ -12,4 +12,3 @@ ProjectProposal/
 MidwayReport/  
 FinalReport/  
 source/
-
