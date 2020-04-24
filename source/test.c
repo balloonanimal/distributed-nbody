@@ -8,11 +8,11 @@ int main(int argc, char *argv[]) {
   sim->gravity_method = PARTICLE_PARTICLE;
   sim->integration_method = LOCKSTEP;
 
-  Particle pt1 = {0};
+  Particle pt1 = {{0}};
   pt1.mass = 100;
   add_particle(sim, pt1, true);
 
-  Particle pt2 = {0};
+  Particle pt2 = {{0}};
   pt2.mass = 1;
   pt2.position.x = 100;
   add_particle(sim, pt2, true);

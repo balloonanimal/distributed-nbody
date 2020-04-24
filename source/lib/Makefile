@@ -1,6 +1,6 @@
 CC = mpicc
 CFLAGS_WARN = -Wall -Wvla -Werror -Wno-error=unused-variable
-CFLAGS = -std=c99 -g -O2 -fPIC -lm $(CFLAGS_WARN)
+CFLAGS = -std=c99 -g -O2 -fPIC $(CFLAGS_WARN)
 
 BUILD_DIR = build
 _OBJ = simulation.o mpi_utils.o
@@ -16,7 +16,7 @@ $(BUILD_DIR):
 	mkdir $@
 
 $(LIBFILE): $(OBJ)
-	$(CC) $(CFLAGS) -shared $(OBJ) -o $@
+	$(CC) $(CFLAGS) -lm -shared $(OBJ) -o $@
 
 $(BUILD_DIR)/%.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<

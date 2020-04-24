@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
   // reproducible randomness
   srand(0);
   for (int i = 0; i < size; i++) {
-    Particle p = {0};
+    Particle p = {{0}};
     p.mass = rand() % 50;
     p.position.x = rand() % 100;
     p.position.y = rand() % 100;
