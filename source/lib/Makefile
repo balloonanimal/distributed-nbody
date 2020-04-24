@@ -1,11 +1,27 @@
+# compiler
 CC = mpicc
 CFLAGS_WARN = -Wall -Wvla -Werror -Wno-error=unused-variable
 CFLAGS = -std=c99 -g -O2 -fPIC $(CFLAGS_WARN)
 
+LDLIBS = -lm
+
+# OS specific sharedlib
+OS = $(shell uname)
+ifeq ($(OS),Darwin)
+	LDFLAGS = -dynamiclib -install_name=@rpath/libnbody.so
+endif
+ifeq ($(OS),Linux)
+	LDFLAGS = -shared
+endif
+
+# build targets
+SRC = $(wildcard *.c)
+_OBJ = $(SRC:.c=.o)
+DEP = $(wildcard *.h)
+
 BUILD_DIR = build
-_OBJ = simulation.o mpi_utils.o
 OBJ = $(patsubst %,$(BUILD_DIR)/%,$(_OBJ))
-HEADERS = simulation.h types.h mpi_utils.h
+
 _LIBFILE = libnbody.so
 LIBFILE = $(BUILD_DIR)/$(_LIBFILE)
 
@@ -16,9 +32,9 @@ $(BUILD_DIR):
 	mkdir $@
 
 $(LIBFILE): $(OBJ)
-	$(CC) $(CFLAGS) -lm -shared $(OBJ) -o $@
+	$(CC) $(CFLAGS) $(LDLIBS) $(LDFLAGS) $(OBJ) -o $@
 
-$(BUILD_DIR)/%.o: %.c $(HEADERS)
+$(BUILD_DIR)/%.o: %.c $(DEP)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:

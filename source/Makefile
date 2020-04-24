@@ -12,6 +12,7 @@ library:
 	@echo "Building Library"
 	@make -C ./lib/
 	-@ln -sf ./lib/build/libnbody.so .
+	-@install_name_tool -id "@rpath/libnbody.so" libnbody.so
 	@echo "Done building Library"
 
 test: library
