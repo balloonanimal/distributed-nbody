@@ -33,7 +33,8 @@ what you are going to do (or have done), what you have left to do, and in what
 order you plan to do these things.}
 
 \begin{itemize}
-\item Week 1: what we planned, what we did
+\item Week 1: We implemented the sequential and parallel MPI particle-particle algorithm in C++ and tested both on a single machine. 
+\item Week 2: We implemented the sequential Barnes-Hut tree algorithm in C++. We still need to contact Andrew Danner about visualization of our algorithm. We ran tests of the MPI particle-particle on multiple machines and ran into issues.
 \end{itemize}
 
 \section {Difficulties}
@@ -42,6 +43,12 @@ One paragraph describing any difficulties you have encountered so far and how
 you plan to resolve them (or how you did reslove them). If you don' t know how
 to resolve them or have some ideas but have not completely figured it out yet,
 then explicitly tell me this so that I can try to suggest some solutions.}
+
+\begin{itemize}
+    \item Currently there are segfaults in the sequential Barnes-Hut algorithm. Parallelizing the Barnes-Hut algorithm appears very challenging. 
+    \item Updating the tree as particles move becomes difficult, ideally we would only want to rebuild the parts of the tree that have changed. Currently we are rebuilding the entire tree every time-step.
+    \item We are getting deadlock when we run the MPI implementing of particle-particle across machines. It works when running on the same machine. Perhaps the communication overhead is massive and becomes a big issue. 
+\end{itemize}
 
 \end{document}
 
