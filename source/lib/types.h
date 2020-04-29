@@ -29,11 +29,9 @@ typedef struct BHTreeNode {
   Vec3d position;
   double width;
   struct BHTreeNode *children[8];
-  Particle* pt; // NULL if not a leaf node
+  Particle *pt; // NULL if not a leaf node
   int pcount;
 } BHTreeNode;
-
-typedef BHTreeNode BHTree;
 
 typedef enum { PARTICLE_PARTICLE = 0, TREE = 1 } GravityMethod;
 
@@ -51,7 +49,7 @@ typedef struct {
       gravity_method; // which algorithm to use for gravity calculations
   IntegrationMethod
       integration_method; // which algorithm to use for integration
-  BHTree *tree;
+  BHTreeNode *tree;
   // MPI stuff
   bool use_mpi;
   int MPI_pcount;

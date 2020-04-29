@@ -3,14 +3,14 @@
 
 void build_tree(Simulation *sim) {
     // alloc tree
-    sim->tree = calloc(1, sizeof(BHTree));
+    sim->tree = calloc(1, sizeof(BHTreeNode));
 
     for (int i = 1; i < sim->parray.len; i++) {
         add_pt_to_node(sim->tree, &sim->parray.particles[i]);
     }
 }
 
-void add_pt_to_node(BHTree* node, Particle* pt) {
+void add_pt_to_node(BHTreeNode* node, Particle* pt) {
     // Node is terminal
     if (node->pcount == 0) {
         node->pt = pt;
@@ -81,10 +81,9 @@ void create_child(BHTreeNode* node, int oct) {
     } else {
         zdir = -1;
     }
-    Vec3d position = {node->position.x + xdir * child->width,
-                      node->position.x + ydir * child->width,
-                      node->position.x + zdir * child->width};
-    node->position = position;
+    node->position.x = node->position.x + xdir * child->width;
+    node->position.y = node->position.y + ydir * child->width;
+    node->position.z = node->position.z + zdir * child->width;
     node->children[oct] = child;
 }
 
@@ -100,4 +99,21 @@ int get_octant(BHTreeNode* node, Particle* pt) {
         oct += 1;
     }
     return oct;
+}
+
+void free_tree(Simulation* sim) {
+    if (sim->tree == NULL) {
+        return;
+    }
+    free_node(sim->tree);
+    sim->tree = NULL;
+}
+
+void free_node(BHTreeNode* node) {
+    for (int oct = 0; oct < 8; oct++) {
+        if (node->children[oct] != NULL) {
+            free_node(node->children[oct]);
+        }
+    }
+    free(node);
 }

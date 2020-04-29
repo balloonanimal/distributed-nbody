@@ -24,6 +24,7 @@ void calc_gravity(Simulation *sim);
 // helper methods for individual gravity methods
 void calc_gravity_pp(Simulation *sim);
 void calc_gravity_tree(Simulation *sim);
+Vec3d calc_gravity_tree_helper(Simulation* sim, BHTreeNode *node, Particle* pt);
 
 // integrates the system for time_steps
 // uses integrator based on value of integration_method

@@ -8,7 +8,7 @@ LDLIBS = -lm
 # OS specific sharedlib
 OS = $(shell uname)
 ifeq ($(OS),Darwin)
-	LDFLAGS = -dynamiclib -install_name=@rpath/libnbody.so
+	LDFLAGS = -dynamiclib
 endif
 ifeq ($(OS),Linux)
 	LDFLAGS = -shared

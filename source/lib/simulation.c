@@ -1,4 +1,5 @@
 #include "simulation.h"
+#include "bh_tree.h"
 #include "mpi_utils.h"
 
 Simulation *init_simulation(void) {
@@ -53,7 +54,7 @@ void calc_gravity(Simulation *sim) {
     calc_gravity_pp(sim);
     break;
   case TREE:
-    printf("Tree calculation not yet implemented\n");
+    calc_gravity_tree(sim);
     exit(1);
   default:
     printf("Unsupported gravity method\n");
@@ -84,8 +85,8 @@ void calc_gravity_pp(Simulation *sim) {
       double dx = particles[i].position.x - particles[j].position.x;
       double dy = particles[i].position.y - particles[j].position.y;
       double dz = particles[i].position.z - particles[j].position.z;
-      double r = sqrt(dx * dx + dy * dy + dz * dz) + sim->softening;
-      double almost_a = sim->G / (r * r);
+      double r2 = dx * dx + dy * dy + dz * dz + sim->softening * sim->softening;
+      double almost_a = sim->G / r2;
       // update particle i
       double almost_ai = -almost_a * particles[j].mass;
       particles[i].acceleration.x = almost_ai * dx;
@@ -103,8 +104,60 @@ void calc_gravity_pp(Simulation *sim) {
   }
 }
 
-// TODO: implement
 void calc_gravity_tree(Simulation *sim) {
+  Particle *particles = sim->parray.particles;
+  int N_owned = sim->N_owned;
+
+  // zero all accelerations
+  for (int i = 0; i < N_owned; i++) {
+    particles[i].acceleration.x = 0;
+    particles[i].acceleration.y = 0;
+    particles[i].acceleration.z = 0;
+  }
+
+  // TODO: definitely doesn't belong here
+  // HACK HACK HACK HACK HACK
+  // FIXME FIXME FIXME FIXME
+  free_tree(sim);
+  build_tree(sim);
+
+  // tree calculation
+  for (int i = 0; i < N_owned; i++) {
+    particles[i].acceleration =
+        calc_gravity_tree_helper(sim, sim->tree, &particles[i]);
+  }
+}
+
+Vec3d calc_gravity_tree_helper(Simulation *sim, BHTreeNode *node,
+                               Particle *pt) {
+  Vec3d a;
+  int dx = (node->COM_position.x - pt->position.x);
+  int dy = (node->COM_position.y - pt->position.y);
+  int dz = (node->COM_position.z - pt->position.z);
+  int r2 = dx * dx + dy * dy + dz * dz;
+  int w2 = node->width * node->width;
+  // Far away or lone node, estimate is good
+  if (w2 / r2 < 1 || node->pcount == 1) {
+    double almost_a =
+        -sim->G * node->COM_mass / (r2 + sim->softening * sim->softening);
+    Vec3d a_ = {almost_a * dx, almost_a * dy, almost_a * dz};
+    a = a_;
+  }
+  // Too close to estimate
+  else {
+    Vec3d a_sum = {0, 0, 0};
+    Vec3d a_;
+    for (int oct = 0; oct < 8; oct++) {
+      if (node->children[oct] != NULL) {
+        a_ = calc_gravity_tree_helper(sim, node->children[oct], pt);
+        a_sum.x += a_.x;
+        a_sum.y += a_.y;
+        a_sum.z += a_.z;
+      }
+    }
+    a = a_sum;
+  }
+  return a;
 }
 
 void integrate(Simulation *sim, int time_steps) {
