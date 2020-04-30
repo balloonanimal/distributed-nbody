@@ -13,7 +13,8 @@ Simulation *init_simulation(void) {
   sim->elapsed_time = 0.0;
   sim->dt = 0.1;
   sim->G = 1.0;
-  sim->softening = 1E-8;
+  sim->softening = 1E-6;
+  sim->width = 10000;
   sim->gravity_method = PARTICLE_PARTICLE;
   sim->integration_method = LOCKSTEP;
 
@@ -55,7 +56,7 @@ void calc_gravity(Simulation *sim) {
     break;
   case TREE:
     calc_gravity_tree(sim);
-    exit(1);
+    break;
   default:
     printf("Unsupported gravity method\n");
     exit(1);
@@ -122,40 +123,48 @@ void calc_gravity_tree(Simulation *sim) {
   build_tree(sim);
 
   // tree calculation
+  Vec3d a;
   for (int i = 0; i < N_owned; i++) {
-    particles[i].acceleration =
-        calc_gravity_tree_helper(sim, sim->tree, &particles[i]);
+    // TODO maybe this sort of assignment is slower that doing it inside of the
+    // fn?
+    a = calc_gravity_tree_helper(sim, sim->tree, &particles[i]);
+    particles[i].acceleration.x = a.x;
+    particles[i].acceleration.y = a.y;
+    particles[i].acceleration.z = a.z;
   }
 }
 
 Vec3d calc_gravity_tree_helper(Simulation *sim, BHTreeNode *node,
                                Particle *pt) {
-  Vec3d a;
-  int dx = (node->COM_position.x - pt->position.x);
-  int dy = (node->COM_position.y - pt->position.y);
-  int dz = (node->COM_position.z - pt->position.z);
-  int r2 = dx * dx + dy * dy + dz * dz;
-  int w2 = node->width * node->width;
+  // node is terminal and contains pt, base case for recursion
+  Vec3d a = {0, 0, 0};
+  if (pt == node->pt) {
+    return a;
+  }
+
+  double dx = (node->COM_position.x - pt->position.x);
+  double dy = (node->COM_position.y - pt->position.y);
+  double dz = (node->COM_position.z - pt->position.z);
+  double r2 = dx * dx + dy * dy + dz * dz + sim->softening * sim->softening;
+  double w2 = node->width * node->width;
   // Far away or lone node, estimate is good
   if (w2 / r2 < 1 || node->pcount == 1) {
-    double almost_a =
-        -sim->G * node->COM_mass / (r2 + sim->softening * sim->softening);
-    Vec3d a_ = {almost_a * dx, almost_a * dy, almost_a * dz};
-    a = a_;
+    double almost_a = -sim->G * node->COM_mass / r2;
+    a.x = almost_a * dx;
+    a.y = almost_a * dy;
+    a.z = almost_a * dz;
   }
-  // Too close to estimate
+  // Too close to estimate, recur to child nodes
   else {
-    Vec3d a_sum = {0, 0, 0};
     Vec3d a_;
     for (int oct = 0; oct < 8; oct++) {
       if (node->children[oct] != NULL) {
         a_ = calc_gravity_tree_helper(sim, node->children[oct], pt);
-        a_sum.x += a_.x;
-        a_sum.y += a_.y;
-        a_sum.z += a_.z;
+        a.x += a_.x;
+        a.y += a_.y;
+        a.z += a_.z;
       }
     }
-    a = a_sum;
   }
   return a;
 }
@@ -176,7 +185,7 @@ void integrate_step(Simulation *sim) {
     break;
   case LEAPFROG:
     integrate_step_leapfrog(sim);
-    exit(1);
+    break;
   default:
     printf("Unsupported gravity method\n");
     exit(1);

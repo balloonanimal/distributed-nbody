@@ -19,9 +19,9 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < size; i++) {
     Particle p = {{0}};
     p.mass = rand() % 50;
-    p.position.x = rand() % 100;
-    p.position.y = rand() % 100;
-    p.position.z = rand() % 100;
+    p.position.x = rand() % (2 * sim->width) - sim->width;
+    p.position.y = rand() % (2 * sim->width) - sim->width;
+    p.position.z = rand() % (2 * sim->width) - sim->width;
     add_particle(sim, p, true);
   }
 

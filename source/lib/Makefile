@@ -1,7 +1,7 @@
 # compiler
 CC = mpicc
 CFLAGS_WARN = -Wall -Wvla -Werror -Wno-error=unused-variable
-CFLAGS = -std=c99 -g -O2 -fPIC $(CFLAGS_WARN)
+CFLAGS = -std=c99 -g -fPIC $(CFLAGS_WARN)
 
 LDLIBS = -lm
 
