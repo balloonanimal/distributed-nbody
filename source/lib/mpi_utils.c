@@ -18,18 +18,25 @@ void MPI_setup(Simulation *sim) {
   }
 
   // datatypes
-  MPI_Datatype type_vec3d;
-  MPI_Type_contiguous(3, MPI_DOUBLE, &type_vec3d);
-  MPI_Type_commit(&type_vec3d);
-
   // FRAGILE, any change to particle requires a change to this
-  int block_lens[4] = {1, 1, 1, 1};
-  MPI_Aint displacements[4] = {
-      offsetof(Particle, position), offsetof(Particle, velocity),
-      offsetof(Particle, acceleration), offsetof(Particle, mass)};
-  MPI_Datatype types[4] = {type_vec3d, type_vec3d, type_vec3d, MPI_DOUBLE};
+  int p_block_lens[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  MPI_Aint p_displacements[10] = {
+      offsetof(Particle, pos_x), offsetof(Particle, pos_y),
+      offsetof(Particle, pos_z), offsetof(Particle, vel_x),
+      offsetof(Particle, vel_y), offsetof(Particle, vel_z),
+      offsetof(Particle, acc_x), offsetof(Particle, acc_y),
+      offsetof(Particle, acc_z), offsetof(Particle, mass)};
+  printf("offsets: %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld\n",
+         p_displacements[0], p_displacements[1], p_displacements[2],
+         p_displacements[3], p_displacements[4], p_displacements[5],
+         p_displacements[6], p_displacements[7], p_displacements[8],
+         p_displacements[9]);
+  MPI_Datatype p_types[10] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+                              MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+                              MPI_DOUBLE, MPI_DOUBLE};
   MPI_Datatype type_particle;
-  MPI_Type_create_struct(1, block_lens, displacements, types, &type_particle);
+  MPI_Type_create_struct(1, p_block_lens, p_displacements, p_types,
+                         &type_particle);
   MPI_Type_commit(&type_particle);
   sim->MPI_particle_type = type_particle;
 
@@ -54,6 +61,9 @@ void MPI_sync_particles(Simulation *sim) {
     MPI_Bcast(&recv_sizes[pnum], 1, MPI_INT, pnum, MPI_COMM_WORLD);
   }
 
+  printf("recv_sizes: %d %d %d %d\n", recv_sizes[0], recv_sizes[1],
+         recv_sizes[2], recv_sizes[3]);
+
   // allocate space for payload
   for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
     if (pnum == sim->MPI_rank) {
@@ -63,8 +73,6 @@ void MPI_sync_particles(Simulation *sim) {
   }
 
   // take turns recieving payload
-  // TODO: should switch to non-blocking, major bottleneck
-
   //  setup non-blocking recieves
   MPI_Request *requests = calloc(sim->MPI_pcount, sizeof(MPI_Request));
   for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
@@ -80,8 +88,20 @@ void MPI_sync_particles(Simulation *sim) {
     if (pnum == sim->MPI_rank) {
       continue;
     }
-    MPI_Send(sim->parray.particles, sim->parray.len, sim->MPI_particle_type,
-             pnum, 0, MPI_COMM_WORLD);
+    MPI_Send(sim->parray.particles, sim->N_owned, sim->MPI_particle_type, pnum,
+             0, MPI_COMM_WORLD);
+  }
+
+  // wait
+  for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
+    if (pnum == sim->MPI_rank) {
+      continue;
+    }
+    MPI_Status status;
+    MPI_Wait(&requests[pnum], &status);
+    int count;
+    MPI_Get_count(&status, MPI_BYTE, &count);
+    printf("recieved a count of %d\n", count);
   }
 
   // add to parray
@@ -92,10 +112,14 @@ void MPI_sync_particles(Simulation *sim) {
     ParticleArray *n_parray = &sim->recv_arrays[pnum];
     n_parray->len = recv_sizes[pnum];
     for (int i = 0; i < n_parray->len; i++) {
+      printf("(%.3f, %.3f, %.3f : %f)\n", n_parray->particles[i].vel_x,
+             n_parray->particles[i].vel_y, n_parray->particles[i].vel_z,
+             n_parray->particles[i].mass);
       add_particle(sim, n_parray->particles[i], false);
     }
   }
 
+  MPI_Barrier(MPI_COMM_WORLD);
   free(recv_sizes);
   free(requests);
 }

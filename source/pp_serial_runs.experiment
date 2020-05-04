@@ -1,0 +1,170 @@
+Script started on 2020-04-29 00:17:34-0400
+You are using 89% (4463 MB) of your 5000 MB quota.
+[0m[34m[00:17][0m [33m{savory}[0m ~/cs87/project/source [32m$[0m ./run.sh exec env TERM='dumb' INSIDE_EMACS='26.3,tramp:2.3.5.26.3' ENV='' HISTFILE=~/.tramp_history PROMPT_COMMAND='' PS1=\#\$\  PS2=''' PS3='' /bin/sh [A[0m[34m[00:17][0m [33m{savory}[0m ~/cs87/project/source [32m$[0m ./run.sh [K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C
+Running experiments for 10000 steps 
+ 
+particles: 256
+   run 1
+
+real	0m5.051s
+user	0m5.048s
+sys	0m0.000s
+   run 2
+
+real	0m5.048s
+user	0m5.047s
+sys	0m0.000s
+   run 3
+
+real	0m5.036s
+user	0m5.034s
+sys	0m0.000s
+   run 4
+
+real	0m5.087s
+user	0m5.081s
+sys	0m0.004s
+   run 5
+
+real	0m5.034s
+user	0m5.029s
+sys	0m0.004s
+ 
+particles: 512
+   run 1
+
+real	0m20.131s
+user	0m20.130s
+sys	0m0.000s
+   run 2
+
+real	0m20.097s
+user	0m20.096s
+sys	0m0.000s
+   run 3
+
+real	0m20.174s
+user	0m20.169s
+sys	0m0.004s
+   run 4
+
+real	0m20.089s
+user	0m20.088s
+sys	0m0.000s
+   run 5
+
+real	0m20.087s
+user	0m20.086s
+sys	0m0.000s
+ 
+particles: 1024
+   run 1
+
+real	1m20.763s
+user	1m20.761s
+sys	0m0.000s
+   run 2
+
+real	1m20.235s
+user	1m20.228s
+sys	0m0.004s
+   run 3
+
+real	1m21.059s
+user	1m21.038s
+sys	0m0.000s
+   run 4
+
+real	1m20.319s
+user	1m20.313s
+sys	0m0.004s
+   run 5
+
+real	1m20.387s
+user	1m20.385s
+sys	0m0.000s
+ 
+particles: 2048
+   run 1
+
+real	5m21.708s
+user	5m21.701s
+sys	0m0.004s
+   run 2
+
+real	5m21.496s
+user	5m21.488s
+sys	0m0.004s
+   run 3
+
+real	5m21.407s
+user	5m21.403s
+sys	0m0.000s
+   run 4
+
+real	5m21.512s
+user	5m21.508s
+sys	0m0.000s
+   run 5
+
+real	5m21.109s
+user	5m21.080s
+sys	0m0.024s
+ 
+particles: 4096
+   run 1
+
+real	21m27.332s
+user	21m27.223s
+sys	0m0.100s
+   run 2
+
+real	21m27.929s
+user	21m27.922s
+sys	0m0.000s
+   run 3
+
+real	21m27.922s
+user	21m27.911s
+sys	0m0.004s
+   run 4
+
+real	21m29.268s
+user	21m29.261s
+sys	0m0.000s
+   run 5
+
+real	21m24.748s
+user	21m24.694s
+sys	0m0.044s
+ 
+particles: 8192
+   run 1
+
+real	86m4.566s
+user	86m3.293s
+sys	0m0.024s
+   run 2
+
+real	86m2.515s
+user	86m2.490s
+sys	0m0.004s
+   run 3
+
+real	86m2.035s
+user	86m2.010s
+sys	0m0.004s
+   run 4
+
+real	85m56.708s
+user	85m56.327s
+sys	0m0.328s
+   run 5
+
+real	85m57.925s
+user	85m57.543s
+sys	0m0.328s
+[0m[34m[09:50][0m [33m{savory}[0m ~/cs87/project/source [32m$[0m exit
+
+Script done on 2020-04-29 11:17:04-0400

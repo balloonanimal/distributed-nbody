@@ -11,9 +11,15 @@ typedef struct {
 } Vec3d;
 
 typedef struct {
-  Vec3d position;
-  Vec3d velocity;
-  Vec3d acceleration;
+  double pos_x;
+  double pos_y;
+  double pos_z;
+  double vel_x;
+  double vel_y;
+  double vel_z;
+  double acc_x;
+  double acc_y;
+  double acc_z;
   double mass;
 } Particle;
 
@@ -25,8 +31,12 @@ typedef struct {
 
 typedef struct BHTreeNode {
   double COM_mass;
-  Vec3d COM_position;
-  Vec3d position;
+  double x;
+  double y;
+  double z;
+  double COM_x;
+  double COM_y;
+  double COM_z;
   double width;
   struct BHTreeNode *children[8];
   Particle *pt; // NULL if not a leaf node

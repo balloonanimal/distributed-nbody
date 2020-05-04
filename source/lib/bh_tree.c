@@ -18,7 +18,9 @@ void add_pt_to_node(BHTreeNode *node, Particle *pt) {
   if (node->pcount == 0) {
     node->pt = pt;
     node->COM_mass = pt->mass;
-    node->COM_position = pt->position;
+    node->COM_x = pt->pos_x;
+    node->COM_y = pt->pos_y;
+    node->COM_z = pt->pos_z;
     node->pcount = 1;
   }
   // Node is terminal but non-empty
@@ -47,9 +49,9 @@ void add_pt_to_node(BHTreeNode *node, Particle *pt) {
     add_pt_to_node(node->children[oct_], pt);
     // recalc COM
     node->COM_mass = node->COM_mass + pt->mass;
-    node->COM_position.x = (node->COM_position.x + pt->position.x) / 2;
-    node->COM_position.y = (node->COM_position.y + pt->position.y) / 2;
-    node->COM_position.z = (node->COM_position.z + pt->position.z) / 2;
+    node->COM_x = (node->COM_x + pt->pos_x) / 2;
+    node->COM_y = (node->COM_y + pt->pos_y) / 2;
+    node->COM_z = (node->COM_z + pt->pos_z) / 2;
     node->pcount = 2;
   }
   // Node is not terminal
@@ -61,15 +63,12 @@ void add_pt_to_node(BHTreeNode *node, Particle *pt) {
     add_pt_to_node(node->children[oct], pt);
     // recalc COM
     node->COM_mass = node->COM_mass + pt->mass;
-    node->COM_position.x =
-        ((node->pcount * node->COM_position.x + pt->position.x) /
-         (node->pcount + 1));
-    node->COM_position.y =
-        ((node->pcount * node->COM_position.y + pt->position.y) /
-         (node->pcount + 1));
-    node->COM_position.z =
-        ((node->pcount * node->COM_position.z + pt->position.z) /
-         (node->pcount + 1));
+    node->COM_x =
+        ((node->pcount * node->COM_x + pt->pos_x) / (node->pcount + 1));
+    node->COM_y =
+        ((node->pcount * node->COM_y + pt->pos_y) / (node->pcount + 1));
+    node->COM_z =
+        ((node->pcount * node->COM_z + pt->pos_z) / (node->pcount + 1));
     node->pcount += 1;
   }
 }
@@ -94,21 +93,21 @@ void create_child(BHTreeNode *node, int oct) {
   } else {
     zdir = -1;
   }
-  child->position.x = node->position.x + xdir * child->width;
-  child->position.y = node->position.y + ydir * child->width;
-  child->position.z = node->position.z + zdir * child->width;
+  child->x = node->x + xdir * child->width;
+  child->y = node->y + ydir * child->width;
+  child->z = node->z + zdir * child->width;
   node->children[oct] = child;
 }
 
 int get_octant(BHTreeNode *node, Particle *pt) {
   int oct = 0;
-  if (pt->position.x < node->position.x) {
+  if (pt->pos_x < node->x) {
     oct += 4;
   }
-  if (pt->position.y < node->position.y) {
+  if (pt->pos_y < node->y) {
     oct += 2;
   }
-  if (pt->position.z < node->position.z) {
+  if (pt->pos_z < node->z) {
     oct += 1;
   }
   return oct;

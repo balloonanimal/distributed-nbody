@@ -12,7 +12,7 @@ Simulation *init_simulation(void) {
   // Defaults
   sim->elapsed_time = 0.0;
   sim->dt = 0.1;
-  sim->G = 1.0;
+  sim->G = 1E10;
   sim->softening = 1E-6;
   sim->width = 10000;
   sim->gravity_method = PARTICLE_PARTICLE;
@@ -70,9 +70,9 @@ void calc_gravity_pp(Simulation *sim) {
 
   // zero all accelerations
   for (int i = 0; i < N_owned; i++) {
-    particles[i].acceleration.x = 0;
-    particles[i].acceleration.y = 0;
-    particles[i].acceleration.z = 0;
+    particles[i].acc_x = 0;
+    particles[i].acc_y = 0;
+    particles[i].acc_z = 0;
   }
 
   // iterate through all pairs of particles
@@ -83,23 +83,23 @@ void calc_gravity_pp(Simulation *sim) {
   for (int i = 0; i < N_owned; i++) {
     //  all particles in simulation
     for (int j = i + 1; j < N; j++) {
-      double dx = particles[i].position.x - particles[j].position.x;
-      double dy = particles[i].position.y - particles[j].position.y;
-      double dz = particles[i].position.z - particles[j].position.z;
+      double dx = particles[i].pos_x - particles[j].pos_x;
+      double dy = particles[i].pos_y - particles[j].pos_y;
+      double dz = particles[i].pos_z - particles[j].pos_z;
       double r2 = dx * dx + dy * dy + dz * dz + sim->softening * sim->softening;
       double almost_a = sim->G / r2;
       // update particle i
       double almost_ai = -almost_a * particles[j].mass;
-      particles[i].acceleration.x = almost_ai * dx;
-      particles[i].acceleration.y = almost_ai * dy;
-      particles[i].acceleration.z = almost_ai * dz;
+      particles[i].acc_x = almost_ai * dx;
+      particles[i].acc_y = almost_ai * dy;
+      particles[i].acc_z = almost_ai * dz;
 
       if (j < N_owned) {
         // also update particle j
         double almost_aj = almost_a * particles[i].mass;
-        particles[j].acceleration.x = almost_aj * dx;
-        particles[j].acceleration.y = almost_aj * dy;
-        particles[j].acceleration.z = almost_aj * dz;
+        particles[j].acc_x = almost_aj * dx;
+        particles[j].acc_y = almost_aj * dy;
+        particles[j].acc_z = almost_aj * dz;
       }
     }
   }
@@ -111,26 +111,22 @@ void calc_gravity_tree(Simulation *sim) {
 
   // zero all accelerations
   for (int i = 0; i < N_owned; i++) {
-    particles[i].acceleration.x = 0;
-    particles[i].acceleration.y = 0;
-    particles[i].acceleration.z = 0;
+    particles[i].acc_x = 0;
+    particles[i].acc_y = 0;
+    particles[i].acc_z = 0;
   }
 
-  // TODO: definitely doesn't belong here
-  // HACK HACK HACK HACK HACK
-  // FIXME FIXME FIXME FIXME
+  // build tree
   free_tree(sim);
   build_tree(sim);
 
   // tree calculation
   Vec3d a;
   for (int i = 0; i < N_owned; i++) {
-    // TODO maybe this sort of assignment is slower that doing it inside of the
-    // fn?
     a = calc_gravity_tree_helper(sim, sim->tree, &particles[i]);
-    particles[i].acceleration.x = a.x;
-    particles[i].acceleration.y = a.y;
-    particles[i].acceleration.z = a.z;
+    particles[i].acc_x = a.x;
+    particles[i].acc_y = a.y;
+    particles[i].acc_z = a.z;
   }
 }
 
@@ -142,9 +138,9 @@ Vec3d calc_gravity_tree_helper(Simulation *sim, BHTreeNode *node,
     return a;
   }
 
-  double dx = (node->COM_position.x - pt->position.x);
-  double dy = (node->COM_position.y - pt->position.y);
-  double dz = (node->COM_position.z - pt->position.z);
+  double dx = (node->COM_x - pt->pos_x);
+  double dy = (node->COM_y - pt->pos_y);
+  double dz = (node->COM_z - pt->pos_z);
   double r2 = dx * dx + dy * dy + dz * dz + sim->softening * sim->softening;
   double w2 = node->width * node->width;
   // Far away or lone node, estimate is good
@@ -202,16 +198,16 @@ void integrate_step_lock(Simulation *sim) {
 
   // update velocities
   for (int i = 0; i < N_owned; i++) {
-    particles[i].velocity.x += particles[i].acceleration.x * dt;
-    particles[i].velocity.y += particles[i].acceleration.y * dt;
-    particles[i].velocity.z += particles[i].acceleration.z * dt;
+    particles[i].vel_x += particles[i].acc_x * dt;
+    particles[i].vel_y += particles[i].acc_y * dt;
+    particles[i].vel_z += particles[i].acc_z * dt;
   }
 
   // update positions
   for (int i = 0; i < N_owned; i++) {
-    particles[i].position.x += particles[i].velocity.x * dt;
-    particles[i].position.y += particles[i].velocity.y * dt;
-    particles[i].position.z += particles[i].velocity.z * dt;
+    particles[i].pos_x += particles[i].vel_x * dt;
+    particles[i].pos_y += particles[i].vel_y * dt;
+    particles[i].pos_z += particles[i].vel_z * dt;
   }
 
   sim->elapsed_time += dt;
@@ -226,9 +222,9 @@ void integrate_step_leapfrog(Simulation *sim) {
 
   // first half update positions
   for (i = 0; i < N_owned; i++) {
-    particles[i].position.x += 0.5 * particles[i].velocity.x * dt;
-    particles[i].position.y += 0.5 * particles[i].velocity.y * dt;
-    particles[i].position.z += 0.5 * particles[i].velocity.z * dt;
+    particles[i].pos_x += 0.5 * particles[i].vel_x * dt;
+    particles[i].pos_y += 0.5 * particles[i].vel_y * dt;
+    particles[i].pos_z += 0.5 * particles[i].vel_z * dt;
   }
 
   // update accelerations
@@ -236,19 +232,40 @@ void integrate_step_leapfrog(Simulation *sim) {
 
   // update velocities
   for (i = 0; i < N_owned; i++) {
-    particles[i].velocity.x += particles[i].acceleration.x * dt;
-    particles[i].velocity.y += particles[i].acceleration.y * dt;
-    particles[i].velocity.z += particles[i].acceleration.z * dt;
+    particles[i].vel_x += particles[i].acc_x * dt;
+    particles[i].vel_y += particles[i].acc_y * dt;
+    particles[i].vel_z += particles[i].acc_z * dt;
   }
 
   // second half update positions
   for (i = 0; i < N_owned; i++) {
-    particles[i].position.x += 0.5 * particles[i].velocity.x * dt;
-    particles[i].position.y += 0.5 * particles[i].velocity.y * dt;
-    particles[i].position.z += 0.5 * particles[i].velocity.z * dt;
+    particles[i].pos_x += 0.5 * particles[i].vel_x * dt;
+    particles[i].pos_y += 0.5 * particles[i].vel_y * dt;
+    particles[i].pos_z += 0.5 * particles[i].vel_z * dt;
   }
 
-  // TODO: MPI communicate updated positions / velocities
-
   sim->elapsed_time += dt;
+}
+
+// UTILS
+void print_array(Simulation *sim) {
+  int len = sim->parray.len;
+  Particle *particles = sim->parray.particles;
+  printf("%d: [", sim->MPI_rank);
+  if (len == 0) {
+    printf("]\n");
+    return;
+  }
+  for (int i = 0; i < len; i++) {
+    printf("(%.3f, %.3f, %.3f : %f)", particles[i].pos_x, particles[i].pos_y,
+           particles[i].pos_z, particles[i].mass);
+    if (i == sim->N_owned - 1) {
+      printf(" | ");
+    }
+    if (i == len - 1) {
+      printf("]\n");
+    } else {
+      printf(" ");
+    }
+  }
 }

@@ -8,13 +8,13 @@ int main(int argc, char *argv[]) {
   sim->gravity_method = PARTICLE_PARTICLE;
   sim->integration_method = LOCKSTEP;
 
-  Particle pt1 = {{0}};
+  Particle pt1 = {0};
   pt1.mass = 100;
   add_particle(sim, pt1, true);
 
-  Particle pt2 = {{0}};
+  Particle pt2 = {0};
   pt2.mass = 1;
-  pt2.position.x = 100;
+  pt2.pos_x = 100;
   add_particle(sim, pt2, true);
 
   sim->N_owned = 2;
@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 5; i++) {
     integrate(sim, 1);
     printf("STEP %d\n", i);
-    printf("pt1 position = %f\n", pt1_->position.x);
-    printf("pt2 position = %f\n", pt2_->position.x);
+    printf("pt1 position = %f\n", pt1_->pos_x);
+    printf("pt2 position = %f\n", pt2_->pos_x);
   }
 
   /* printf("pt1 acceleration = x: %lf y: %lf z: %lf\n", */

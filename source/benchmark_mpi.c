@@ -24,31 +24,23 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // TODO: probably want to spin this out into its own fn
-  ParticleArray gen_parray = {0};
-  if (sim->MPI_rank == 0) {
-    // reproducible randomness
-    srand(0);
-    for (int i = 0; i < size; i++) {
-      Particle p = {{0}};
-      p.mass = rand() % 50;
-      p.position.x = rand() % (2 * sim->width) - sim->width;
-      p.position.y = rand() % (2 * sim->width) - sim->width;
-      p.position.z = rand() % (2 * sim->width) - sim->width;
-      add_particle_to_array(&gen_parray, p);
-    }
-  }
-
-  // grow array to fit particles
   int split_size = size / sim->MPI_pcount;
-  grow_array(&sim->parray, split_size);
-
-  // scatter particles to all processes
-  MPI_Scatter(gen_parray.particles, split_size, sim->MPI_particle_type,
-              sim->parray.particles, split_size, sim->MPI_particle_type, 0,
-              MPI_COMM_WORLD);
+  // reproducible randomness
+  srand(100 * sim->MPI_rank);
+  for (int i = 0; i < split_size; i++) {
+    Particle p = {0};
+    p.mass = rand() % 50;
+    p.pos_x = rand() % (int)(2 * sim->width) - sim->width;
+    p.pos_y = rand() % (int)(2 * sim->width) - sim->width;
+    p.pos_z = rand() % (int)(2 * sim->width) - sim->width;
+    add_particle(sim, p, true);
+  }
+  print_array(sim);
 
   integrate(sim, steps);
+
+  print_array(sim);
+
   MPI_teardown(sim);
   return 0;
 }
