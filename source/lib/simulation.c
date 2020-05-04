@@ -12,7 +12,7 @@ Simulation *init_simulation(void) {
   // Defaults
   sim->elapsed_time = 0.0;
   sim->dt = 0.1;
-  sim->G = 1E10;
+  sim->G = 1;
   sim->softening = 1E-6;
   sim->width = 10000;
   sim->gravity_method = PARTICLE_PARTICLE;

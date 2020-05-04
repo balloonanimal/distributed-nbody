@@ -19,26 +19,33 @@ void MPI_setup(Simulation *sim) {
 
   // datatypes
   // FRAGILE, any change to particle requires a change to this
-  int p_block_lens[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-  MPI_Aint p_displacements[10] = {
-      offsetof(Particle, pos_x), offsetof(Particle, pos_y),
-      offsetof(Particle, pos_z), offsetof(Particle, vel_x),
-      offsetof(Particle, vel_y), offsetof(Particle, vel_z),
-      offsetof(Particle, acc_x), offsetof(Particle, acc_y),
-      offsetof(Particle, acc_z), offsetof(Particle, mass)};
-  printf("offsets: %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld\n",
-         p_displacements[0], p_displacements[1], p_displacements[2],
-         p_displacements[3], p_displacements[4], p_displacements[5],
-         p_displacements[6], p_displacements[7], p_displacements[8],
-         p_displacements[9]);
-  MPI_Datatype p_types[10] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
-                              MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
-                              MPI_DOUBLE, MPI_DOUBLE};
+  /* int p_block_lens[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; */
+  /* MPI_Aint p_displacements[10] = { */
+  /*     offsetof(Particle, pos_x), offsetof(Particle, pos_y), */
+  /*     offsetof(Particle, pos_z), offsetof(Particle, vel_x), */
+  /*     offsetof(Particle, vel_y), offsetof(Particle, vel_z), */
+  /*     offsetof(Particle, acc_x), offsetof(Particle, acc_y), */
+  /*     offsetof(Particle, acc_z), offsetof(Particle, mass)}; */
+  /* printf("offsets: %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld\n", */
+  /*        p_displacements[0], p_displacements[1], p_displacements[2], */
+  /*        p_displacements[3], p_displacements[4], p_displacements[5], */
+  /*        p_displacements[6], p_displacements[7], p_displacements[8], */
+  /*        p_displacements[9]); */
+  /* MPI_Datatype p_types[10] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+   */
+  /*                             MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+   */
+  /*                             MPI_DOUBLE, MPI_DOUBLE}; */
   MPI_Datatype type_particle;
-  MPI_Type_create_struct(1, p_block_lens, p_displacements, p_types,
-                         &type_particle);
+  /* MPI_Type_create_struct(1, p_block_lens, p_displacements, p_types, */
+  /*                        &type_particle); */
+  MPI_Type_contiguous(10, MPI_DOUBLE, &type_particle);
   MPI_Type_commit(&type_particle);
   sim->MPI_particle_type = type_particle;
+
+  /* int size; */
+  /* MPI_Type_size(sim->MPI_particle_type, &size); */
+  /* printf("particle size: %d\n", size); */
 
   sim->use_mpi = true;
 }
@@ -52,6 +59,15 @@ void MPI_sync_particles(Simulation *sim) {
   // NOTE: a little hacky?
   sim->parray.len = sim->N_owned;
 
+  //  TODO: remove
+  /* for (int i = 0; i < sim->N_owned; i++) { */
+  /*   printf("owned: (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f : %f)\n", */
+  /*          sim->parray.particles[i].pos_x, sim->parray.particles[i].pos_y, */
+  /*          sim->parray.particles[i].pos_z, sim->parray.particles[i].vel_x, */
+  /*          sim->parray.particles[i].vel_y, sim->parray.particles[i].vel_z, */
+  /*          sim->parray.particles[i].mass); */
+  /* } */
+
   // take turns sending size of payload
   int *recv_sizes = calloc(sim->MPI_pcount, sizeof(int));
   for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
@@ -61,8 +77,8 @@ void MPI_sync_particles(Simulation *sim) {
     MPI_Bcast(&recv_sizes[pnum], 1, MPI_INT, pnum, MPI_COMM_WORLD);
   }
 
-  printf("recv_sizes: %d %d %d %d\n", recv_sizes[0], recv_sizes[1],
-         recv_sizes[2], recv_sizes[3]);
+  /* printf("recv_sizes: %d %d %d %d\n", recv_sizes[0], recv_sizes[1], */
+  /*        recv_sizes[2], recv_sizes[3]); */
 
   // allocate space for payload
   for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
@@ -73,14 +89,16 @@ void MPI_sync_particles(Simulation *sim) {
   }
 
   // take turns recieving payload
-  //  setup non-blocking recieves
+  // setup non-blocking recieves
   MPI_Request *requests = calloc(sim->MPI_pcount, sizeof(MPI_Request));
   for (int pnum = 0; pnum < sim->MPI_pcount; pnum++) {
     if (pnum == sim->MPI_rank || recv_sizes[pnum] == 0) {
       continue;
     }
     MPI_Irecv(sim->recv_arrays[pnum].particles, recv_sizes[pnum],
-              sim->MPI_particle_type, pnum, 0, MPI_COMM_WORLD, &requests[pnum]);
+              sim->MPI_particle_type, pnum,
+              pnum * sim->MPI_pcount + sim->MPI_rank, MPI_COMM_WORLD,
+              &(requests[pnum]));
   }
 
   // send
@@ -89,7 +107,11 @@ void MPI_sync_particles(Simulation *sim) {
       continue;
     }
     MPI_Send(sim->parray.particles, sim->N_owned, sim->MPI_particle_type, pnum,
-             0, MPI_COMM_WORLD);
+             sim->MPI_rank * sim->MPI_pcount + pnum, MPI_COMM_WORLD);
+    /* printf("send: (%.3f, %.3f, %.3f : %f)\n", sim->parray.particles[1].pos_x,
+     */
+    /*        sim->parray.particles[1].pos_y, sim->parray.particles[1].pos_z, */
+    /*        sim->parray.particles[1].mass); */
   }
 
   // wait
@@ -98,10 +120,10 @@ void MPI_sync_particles(Simulation *sim) {
       continue;
     }
     MPI_Status status;
-    MPI_Wait(&requests[pnum], &status);
-    int count;
-    MPI_Get_count(&status, MPI_BYTE, &count);
-    printf("recieved a count of %d\n", count);
+    MPI_Wait(&(requests[pnum]), &status);
+    /* int count; */
+    /* MPI_Get_count(&status, MPI_BYTE, &count); */
+    /* printf("recieved a count of %d\n", count); */
   }
 
   // add to parray
@@ -112,9 +134,11 @@ void MPI_sync_particles(Simulation *sim) {
     ParticleArray *n_parray = &sim->recv_arrays[pnum];
     n_parray->len = recv_sizes[pnum];
     for (int i = 0; i < n_parray->len; i++) {
-      printf("(%.3f, %.3f, %.3f : %f)\n", n_parray->particles[i].vel_x,
-             n_parray->particles[i].vel_y, n_parray->particles[i].vel_z,
-             n_parray->particles[i].mass);
+      /* printf("recv: (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f : %f)\n", */
+      /*        n_parray->particles[i].pos_x, n_parray->particles[i].pos_y, */
+      /*        n_parray->particles[i].pos_z, n_parray->particles[i].vel_x, */
+      /*        n_parray->particles[i].vel_y, n_parray->particles[i].vel_z, */
+      /*        n_parray->particles[i].mass); */
       add_particle(sim, n_parray->particles[i], false);
     }
   }
