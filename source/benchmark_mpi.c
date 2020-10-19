@@ -35,11 +35,8 @@ int main(int argc, char *argv[]) {
     p.pos_z = rand() % (int)(2 * sim->width) - sim->width;
     add_particle(sim, p, true);
   }
-  print_array(sim);
 
   integrate(sim, steps);
-
-  print_array(sim);
 
   MPI_teardown(sim);
   return 0;
